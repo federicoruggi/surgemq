@@ -55,7 +55,7 @@ type Client struct {
 // Connect is for MQTT clients to open a connection to a remote server. It needs to
 // know the URI, e.g., "tcp://127.0.0.1:1883", so it knows where to connect to. It also
 // needs to be supplied with the MQTT CONNECT message.
-func (this *Client) Connect(uri string, msg *message.ConnectMessage) (err error) {
+func (this *Client) Connect(uri string, msg *message.ConnectMessage, serviceOpts ...func(*service)) (err error) {
 	this.checkConfiguration()
 
 	if msg == nil {
@@ -125,7 +125,7 @@ func (this *Client) Connect(uri string, msg *message.ConnectMessage) (err error)
 		return err
 	}
 
-	if err := this.svc.start(); err != nil {
+	if err := this.svc.start(serviceOpts...); err != nil {
 		this.svc.stop()
 		return err
 	}

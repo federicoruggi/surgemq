@@ -118,7 +118,7 @@ type Server struct {
 // or if there's some critical error that stops the server from running. The URI
 // supplied should be of the form "protocol://host:port" that can be parsed by
 // url.Parse(). For example, an URI could be "tcp://0.0.0.0:1883".
-func (this *Server) ListenAndServe(uri string) error {
+func (this *Server) ListenAndServe(uri string, serviceOpts ...func(*service)) error {
 	defer atomic.CompareAndSwapInt32(&this.running, 1, 0)
 
 	if !atomic.CompareAndSwapInt32(&this.running, 0, 1) {
@@ -171,7 +171,7 @@ func (this *Server) ListenAndServe(uri string) error {
 			return err
 		}
 
-		go this.handleConnection(conn)
+		go this.handleConnection(conn, serviceOpts...)
 	}
 }
 
@@ -240,7 +240,7 @@ func (this *Server) Close() error {
 }
 
 // HandleConnection is for the broker to handle an incoming connection from a client
-func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
+func (this *Server) handleConnection(c io.Closer, serviceOpts ...func(*service)) (svc *service, err error) {
 	if c == nil {
 		return nil, ErrInvalidConnectionType
 	}
@@ -329,7 +329,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 	svc.inStat.increment(int64(req.Len()))
 	svc.outStat.increment(int64(resp.Len()))
 
-	if err := svc.start(); err != nil {
+	if err := svc.start(serviceOpts...); err != nil {
 		svc.stop()
 		return nil, err
 	}

@@ -121,10 +121,17 @@ type service struct {
 	subs  []interface{}
 	qoss  []byte
 	rmsgs []*message.PublishMessage
+
+	// Function to be run when receiving an EOF on current connection
+	onEOFFunc func()
 }
 
-func (this *service) start() error {
+func (this *service) start(opts ...func(*service)) error {
 	var err error
+
+	for _, opt := range opts {
+		opt(this)
+	}
 
 	// Create the incoming ring buffer
 	this.in, err = newBuffer(defaultBufferSize)
@@ -446,4 +453,14 @@ func (this *service) isDone() bool {
 
 func (this *service) cid() string {
 	return fmt.Sprintf("%d/%s", this.id, this.sess.ID())
+}
+
+func (this *service) onEOF() {
+	this.onEOFFunc()
+}
+
+func OnEOF(fn func()) func(*service) {
+	return func(srv *service) {
+		srv.onEOFFunc = fn
+	}
 }
