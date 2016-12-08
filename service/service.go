@@ -130,6 +130,9 @@ func (this *service) start(opts ...func(*service)) error {
 	var err error
 
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		opt(this)
 	}
 
@@ -456,7 +459,9 @@ func (this *service) cid() string {
 }
 
 func (this *service) onEOF() {
-	this.onEOFFunc()
+	if this.onEOFFunc != nil {
+		this.onEOFFunc()
+	}
 }
 
 func OnEOF(fn func()) func(*service) {
