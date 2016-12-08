@@ -123,7 +123,7 @@ type service struct {
 	rmsgs []*message.PublishMessage
 
 	// Function to be run when receiving an EOF on current connection
-	onEOFFunc func()
+	onServiceErrorFunc func(ServiceError)
 }
 
 func (this *service) start(opts ...func(*service)) error {
@@ -458,14 +458,34 @@ func (this *service) cid() string {
 	return fmt.Sprintf("%d/%s", this.id, this.sess.ID())
 }
 
-func (this *service) onEOF() {
-	if this.onEOFFunc != nil {
-		this.onEOFFunc()
+type ServiceError struct {
+	srv *service
+	err error
+}
+
+func newServiceError(srv *service, err error) ServiceError {
+	return ServiceError{
+		srv: srv,
+		err: err,
 	}
 }
 
-func OnEOF(fn func()) func(*service) {
+func (e ServiceError) Error() string {
+	return e.err.Error()
+}
+
+func (e ServiceError) SessionID() string {
+	return e.srv.sess.ID()
+}
+
+func (this *service) onServiceError(err ServiceError) {
+	if this.onServiceErrorFunc != nil {
+		this.onServiceErrorFunc(err)
+	}
+}
+
+func OnServiceError(fn func(err ServiceError)) func(*service) {
 	return func(srv *service) {
-		srv.onEOFFunc = fn
+		srv.onServiceErrorFunc = fn
 	}
 }

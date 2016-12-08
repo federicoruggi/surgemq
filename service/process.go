@@ -53,8 +53,8 @@ func (this *service) processor() {
 		if err != nil {
 			glog.Errorf("(%s) Error peeking next message size: %v", this.cid(), err)
 
-			if err == io.EOF {
-				this.onEOF()
+			if serr, ok := err.(ServiceError); ok {
+				this.onServiceError(serr)
 			}
 
 			return
@@ -64,8 +64,8 @@ func (this *service) processor() {
 		if err != nil {
 			glog.Errorf("(%s) Error peeking next message: %v", this.cid(), err)
 
-			if err == io.EOF {
-				this.onEOF()
+			if serr, ok := err.(ServiceError); ok {
+				this.onServiceError(serr)
 			}
 
 			return

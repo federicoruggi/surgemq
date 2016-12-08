@@ -149,7 +149,7 @@ func (this *service) peekMessageSize() (message.MessageType, int, error) {
 		// Peek cnt bytes from the input buffer.
 		b, err = this.in.ReadWait(cnt)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, newServiceError(this, err)
 		}
 
 		// If not enough bytes are returned, then continue until there's enough.
@@ -196,7 +196,7 @@ func (this *service) peekMessage(mtype message.MessageType, total int) (message.
 		// Peek remlen bytes from the input buffer.
 		b, err = this.in.ReadWait(total)
 		if err != nil && err != ErrBufferInsufficientData {
-			return nil, 0, err
+			return nil, 0, newServiceError(this, err)
 		}
 
 		// If not enough bytes are returned, then continue until there's enough.
@@ -240,7 +240,7 @@ func (this *service) readMessage(mtype message.MessageType, total int) (message.
 		l += n
 		glog.Debugf("read %d bytes, total %d", n, l)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, newServiceError(this, err)
 		}
 	}
 
