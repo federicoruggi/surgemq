@@ -139,7 +139,7 @@ func (this *Server) ListenAndServe(uri string, tlsConfig *tls.Config, serviceOpt
 			return err
 		}
 	} else {
-		this.l, err = tls.Listen(u.Scheme, u.Host, tlsConfig)
+		this.ln, err = tls.Listen(u.Scheme, u.Host, tlsConfig)
 		if err != nil {
 			return err
 		}
