@@ -15,6 +15,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -118,7 +119,7 @@ type Server struct {
 // or if there's some critical error that stops the server from running. The URI
 // supplied should be of the form "protocol://host:port" that can be parsed by
 // url.Parse(). For example, an URI could be "tcp://0.0.0.0:1883".
-func (this *Server) ListenAndServe(uri string, serviceOpts ...func(*service)) error {
+func (this *Server) ListenAndServe(uri string, tlsConfig *tls.Config, serviceOpts ...func(*service)) error {
 	defer atomic.CompareAndSwapInt32(&this.running, 1, 0)
 
 	if !atomic.CompareAndSwapInt32(&this.running, 0, 1) {
@@ -132,9 +133,16 @@ func (this *Server) ListenAndServe(uri string, serviceOpts ...func(*service)) er
 		return err
 	}
 
-	this.ln, err = net.Listen(u.Scheme, u.Host)
-	if err != nil {
-		return err
+	if tlsConfig == nil {
+		this.ln, err = net.Listen(u.Scheme, u.Host)
+		if err != nil {
+			return err
+		}
+	} else {
+		this.l, err = tls.Listen(u.Scheme, u.Host, tlsConfig)
+		if err != nil {
+			return err
+		}
 	}
 	defer this.ln.Close()
 
