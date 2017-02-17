@@ -46,10 +46,10 @@ var (
 	logger        = golog.New(
 		"mqtt-service",
 		golog.LogLevel(
-			golog.LevelNotice,
 			golog.LevelError,
 			golog.LevelCritical,
-			golog.LevelInfo,
+			//golog.LevelInfo,
+			//golog.LevelNotice,
 		))
 )
 
