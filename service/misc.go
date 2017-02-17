@@ -26,28 +26,28 @@ import (
 func getConnectMessage(conn io.Closer) (*message.ConnectMessage, error) {
 	buf, err := getMessageBuffer(conn)
 	if err != nil {
-		//golog.Debugf("Receive error: %v", err)
+		//logger.Debugf("Receive error: %v", err)
 		return nil, err
 	}
 
 	msg := message.NewConnectMessage()
 
 	_, err = msg.Decode(buf)
-	//golog.Debugf("Received: %s", msg)
+	//logger.Debugf("Received: %s", msg)
 	return msg, err
 }
 
 func getConnackMessage(conn io.Closer) (*message.ConnackMessage, error) {
 	buf, err := getMessageBuffer(conn)
 	if err != nil {
-		//golog.Debugf("Receive error: %v", err)
+		//logger.Debugf("Receive error: %v", err)
 		return nil, err
 	}
 
 	msg := message.NewConnackMessage()
 
 	_, err = msg.Decode(buf)
-	//golog.Debugf("Received: %s", msg)
+	//logger.Debugf("Received: %s", msg)
 	return msg, err
 }
 
@@ -55,10 +55,10 @@ func writeMessage(conn io.Closer, msg message.Message) error {
 	buf := make([]byte, msg.Len())
 	_, err := msg.Encode(buf)
 	if err != nil {
-		//golog.Debugf("Write error: %v", err)
+		//logger.Debugf("Write error: %v", err)
 		return err
 	}
-	//golog.Debugf("Writing: %s", msg)
+	//logger.Debugf("Writing: %s", msg)
 
 	return writeMessageBuffer(conn, buf)
 }
@@ -93,7 +93,7 @@ func getMessageBuffer(c io.Closer) ([]byte, error) {
 
 		n, err := conn.Read(b[0:])
 		if err != nil {
-			//golog.Debugf("Read error: %v", err)
+			//logger.Debugf("Read error: %v", err)
 			return nil, err
 		}
 

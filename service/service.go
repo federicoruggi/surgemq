@@ -43,6 +43,14 @@ func (this *stat) increment(n int64) {
 
 var (
 	gsvcid uint64 = 0
+	logger        = golog.New(
+		"mqtt-service",
+		golog.LogLevel(
+			golog.LevelNotice,
+			golog.LevelError,
+			golog.LevelCritical,
+			golog.LevelInfo,
+		))
 )
 
 type service struct {
@@ -153,7 +161,7 @@ func (this *service) start(opts ...func(*service)) error {
 		// Creat the onPublishFunc so it can be used for published messages
 		this.onpub = func(msg *message.PublishMessage) error {
 			if err := this.publish(msg, nil); err != nil {
-				golog.Errorf("service/onPublish: Error publishing message: %v", err)
+				logger.Errorf("service/onPublish: Error publishing message: %v", err)
 				return err
 			}
 
@@ -200,7 +208,7 @@ func (this *service) stop() {
 	defer func() {
 		// Let's recover from panic
 		if r := recover(); r != nil {
-			golog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			logger.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
 		}
 	}()
 
@@ -211,13 +219,13 @@ func (this *service) stop() {
 
 	// Close quit channel, effectively telling all the goroutines it's time to quit
 	if this.done != nil {
-		golog.Debugf("(%s) closing this.done", this.cid())
+		logger.Debugf("(%s) closing this.done", this.cid())
 		close(this.done)
 	}
 
 	// Close the network connection
 	if this.conn != nil {
-		golog.Debugf("(%s) closing this.conn", this.cid())
+		logger.Debugf("(%s) closing this.conn", this.cid())
 		this.conn.Close()
 	}
 
@@ -227,18 +235,18 @@ func (this *service) stop() {
 	// Wait for all the goroutines to stop.
 	this.wgStopped.Wait()
 
-	golog.Debugf("(%s) Received %d bytes in %d messages.", this.cid(), this.inStat.bytes, this.inStat.msgs)
-	golog.Debugf("(%s) Sent %d bytes in %d messages.", this.cid(), this.outStat.bytes, this.outStat.msgs)
+	logger.Debugf("(%s) Received %d bytes in %d messages.", this.cid(), this.inStat.bytes, this.inStat.msgs)
+	logger.Debugf("(%s) Sent %d bytes in %d messages.", this.cid(), this.outStat.bytes, this.outStat.msgs)
 
 	// Unsubscribe from all the topics for this client, only for the server side though
 	if !this.client && this.sess != nil {
 		topics, _, err := this.sess.Topics()
 		if err != nil {
-			golog.Errorf("(%s/%d): %v", this.cid(), this.id, err)
+			logger.Errorf("(%s/%d): %v", this.cid(), this.id, err)
 		} else {
 			for _, t := range topics {
 				if err := this.topicsMgr.Unsubscribe([]byte(t), &this.onpub); err != nil {
-					golog.Errorf("(%s): Error unsubscribing topic %q: %v", this.cid(), t, err)
+					logger.Errorf("(%s): Error unsubscribing topic %q: %v", this.cid(), t, err)
 				}
 			}
 		}
@@ -246,7 +254,7 @@ func (this *service) stop() {
 
 	// Publish will message if WillFlag is set. Server side only.
 	if !this.client && this.sess.Cmsg.WillFlag() {
-		golog.Infof("(%s) service/stop: connection unexpectedly closed. Sending Will.", this.cid())
+		logger.Infof("(%s) service/stop: connection unexpectedly closed. Sending Will.", this.cid())
 		this.onPublish(this.sess.Will)
 	}
 
@@ -266,7 +274,7 @@ func (this *service) stop() {
 }
 
 func (this *service) publish(msg *message.PublishMessage, onComplete OnCompleteFunc) error {
-	//golog.Debugf("service/publish: Publishing %s", msg)
+	//logger.Debugf("service/publish: Publishing %s", msg)
 	_, err := this.writeMessage(msg)
 	if err != nil {
 		return fmt.Errorf("(%s) Error sending %s message: %v", this.cid(), msg.Name(), err)

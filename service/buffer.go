@@ -184,7 +184,7 @@ func (this *buffer) WriteTo(w io.Writer) (int64, error) {
 		if len(p) > 0 {
 			n, err := w.Write(p)
 			total += int64(n)
-			//golog.Debugf("Wrote %d bytes, totaling %d bytes", n, total)
+			//logger.Debugf("Wrote %d bytes, totaling %d bytes", n, total)
 
 			if err != nil {
 				return total, err
@@ -204,7 +204,7 @@ func (this *buffer) WriteTo(w io.Writer) (int64, error) {
 
 func (this *buffer) Read(p []byte) (int, error) {
 	if this.isDone() && this.Len() == 0 {
-		//golog.Debugf("isDone and len = %d", this.Len())
+		//logger.Debugf("isDone and len = %d", this.Len())
 		return 0, io.EOF
 	}
 
