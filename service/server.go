@@ -25,10 +25,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/federicoruggi/golog"
 	"github.com/federicoruggi/surgemq/auth"
 	"github.com/federicoruggi/surgemq/sessions"
 	"github.com/federicoruggi/surgemq/topics"
-	"github.com/surge/glog"
 	"github.com/surgemq/message"
 )
 
@@ -146,7 +146,7 @@ func (this *Server) ListenAndServe(uri string, tlsConfig *tls.Config, serviceOpt
 	}
 	defer this.ln.Close()
 
-	glog.Infof("server/ListenAndServe: server is ready...")
+	golog.Infof("server/ListenAndServe: server is ready...")
 
 	var tempDelay time.Duration // how long to sleep on accept failure
 
@@ -172,7 +172,7 @@ func (this *Server) ListenAndServe(uri string, tlsConfig *tls.Config, serviceOpt
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				glog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
+				golog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -195,7 +195,7 @@ func (this *Server) Publish(msg *message.PublishMessage, onComplete OnCompleteFu
 
 	if msg.Retain() {
 		if err := this.topicsMgr.Retain(msg); err != nil {
-			glog.Errorf("Error retaining message: %v", err)
+			golog.Errorf("Error retaining message: %v", err)
 		}
 	}
 
@@ -205,12 +205,12 @@ func (this *Server) Publish(msg *message.PublishMessage, onComplete OnCompleteFu
 
 	msg.SetRetain(false)
 
-	//glog.Debugf("(server) Publishing to topic %q and %d subscribers", string(msg.Topic()), len(this.subs))
+	//golog.Debugf("(server) Publishing to topic %q and %d subscribers", string(msg.Topic()), len(this.subs))
 	for _, s := range this.subs {
 		if s != nil {
 			fn, ok := s.(*OnPublishFunc)
 			if !ok {
-				glog.Errorf("Invalid onPublish Function")
+				golog.Errorf("Invalid onPublish Function")
 			} else {
 				(*fn)(msg)
 			}
@@ -232,7 +232,7 @@ func (this *Server) Close() error {
 	this.ln.Close()
 
 	for _, svc := range this.svcs {
-		glog.Infof("Stopping service %d", svc.id)
+		golog.Infof("Stopping service %d", svc.id)
 		svc.stop()
 	}
 
@@ -289,7 +289,7 @@ func (this *Server) handleConnection(c io.Closer, serviceOpts ...func(*service))
 	req, err := getConnectMessage(conn)
 	if err != nil {
 		if cerr, ok := err.(message.ConnackCode); ok {
-			//glog.Debugf("request   message: %s\nresponse message: %s\nerror           : %v", mreq, resp, err)
+			//golog.Debugf("request   message: %s\nresponse message: %s\nerror           : %v", mreq, resp, err)
 			resp.SetReturnCode(cerr)
 			resp.SetSessionPresent(false)
 			writeMessage(conn, resp)
@@ -346,7 +346,7 @@ func (this *Server) handleConnection(c io.Closer, serviceOpts ...func(*service))
 	//this.svcs = append(this.svcs, svc)
 	//this.mu.Unlock()
 
-	glog.Infof("(%s) server/handleConnection: Connection established.", svc.cid())
+	golog.Infof("(%s) server/handleConnection: Connection established.", svc.cid())
 
 	return svc, nil
 }

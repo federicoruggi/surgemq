@@ -21,7 +21,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/surge/glog"
+	"github.com/federicoruggi/golog"
 	"github.com/surgemq/message"
 )
 
@@ -47,21 +47,21 @@ func (this *service) receiver() {
 	defer func() {
 		// Let's recover from panic
 		if r := recover(); r != nil {
-			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			golog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
 		}
 
 		this.wgStopped.Done()
 
-		glog.Debugf("(%s) Stopping receiver", this.cid())
+		golog.Debugf("(%s) Stopping receiver", this.cid())
 	}()
 
-	glog.Debugf("(%s) Starting receiver", this.cid())
+	golog.Debugf("(%s) Starting receiver", this.cid())
 
 	this.wgStarted.Done()
 
 	switch conn := this.conn.(type) {
 	case net.Conn:
-		//glog.Debugf("server/handleConnection: Setting read deadline to %d", time.Second*time.Duration(this.keepAlive))
+		//golog.Debugf("server/handleConnection: Setting read deadline to %d", time.Second*time.Duration(this.keepAlive))
 		keepAlive := time.Second * time.Duration(this.keepAlive)
 		r := timeoutReader{
 			d:    keepAlive + (keepAlive / 2),
@@ -73,17 +73,17 @@ func (this *service) receiver() {
 
 			if err != nil {
 				if err != io.EOF {
-					glog.Errorf("(%s) error reading from connection: %v", this.cid(), err)
+					golog.Errorf("(%s) error reading from connection: %v", this.cid(), err)
 				}
 				return
 			}
 		}
 
 	//case *websocket.Conn:
-	//	glog.Errorf("(%s) Websocket: %v", this.cid(), ErrInvalidConnectionType)
+	//	golog.Errorf("(%s) Websocket: %v", this.cid(), ErrInvalidConnectionType)
 
 	default:
-		glog.Errorf("(%s) %v", this.cid(), ErrInvalidConnectionType)
+		golog.Errorf("(%s) %v", this.cid(), ErrInvalidConnectionType)
 	}
 }
 
@@ -92,15 +92,15 @@ func (this *service) sender() {
 	defer func() {
 		// Let's recover from panic
 		if r := recover(); r != nil {
-			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			golog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
 		}
 
 		this.wgStopped.Done()
 
-		glog.Debugf("(%s) Stopping sender", this.cid())
+		golog.Debugf("(%s) Stopping sender", this.cid())
 	}()
 
-	glog.Debugf("(%s) Starting sender", this.cid())
+	golog.Debugf("(%s) Starting sender", this.cid())
 
 	this.wgStarted.Done()
 
@@ -111,17 +111,17 @@ func (this *service) sender() {
 
 			if err != nil {
 				if err != io.EOF {
-					glog.Errorf("(%s) error writing data: %v", this.cid(), err)
+					golog.Errorf("(%s) error writing data: %v", this.cid(), err)
 				}
 				return
 			}
 		}
 
 	//case *websocket.Conn:
-	//	glog.Errorf("(%s) Websocket not supported", this.cid())
+	//	golog.Errorf("(%s) Websocket not supported", this.cid())
 
 	default:
-		glog.Errorf("(%s) Invalid connection type", this.cid())
+		golog.Errorf("(%s) Invalid connection type", this.cid())
 	}
 }
 
@@ -238,7 +238,7 @@ func (this *service) readMessage(mtype message.MessageType, total int) (message.
 	for l < total {
 		n, err = this.in.Read(this.intmp[l:])
 		l += n
-		glog.Debugf("read %d bytes, total %d", n, l)
+		golog.Debugf("read %d bytes, total %d", n, l)
 		if err != nil {
 			return nil, 0, newServiceError(this, err)
 		}

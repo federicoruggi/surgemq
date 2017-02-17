@@ -24,10 +24,10 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/federicoruggi/golog"
 	"github.com/federicoruggi/surgemq/sessions"
 	"github.com/federicoruggi/surgemq/topics"
 	"github.com/stretchr/testify/require"
-	"github.com/surge/glog"
 	"github.com/surgemq/message"
 )
 
@@ -106,7 +106,7 @@ func startServiceN(t testing.TB, u *url.URL, wg *sync.WaitGroup, ready1, ready2 
 	<-ready2
 
 	for _, svc := range svr.svcs {
-		glog.Infof("Stopping service %d", svc.id)
+		golog.Infof("Stopping service %d", svc.id)
 		svc.stop()
 	}
 
