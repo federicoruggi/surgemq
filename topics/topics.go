@@ -77,6 +77,7 @@ func Register(name string, provider TopicsProvider) error {
 	}
 
 	providers[name] = provider
+	return nil
 }
 
 func Unregister(name string) {
