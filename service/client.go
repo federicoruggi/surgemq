@@ -15,6 +15,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/url"
@@ -55,7 +56,7 @@ type Client struct {
 // Connect is for MQTT clients to open a connection to a remote server. It needs to
 // know the URI, e.g., "tcp://127.0.0.1:1883", so it knows where to connect to. It also
 // needs to be supplied with the MQTT CONNECT message.
-func (this *Client) Connect(uri string, msg *message.ConnectMessage, serviceOpts ...func(*service)) (err error) {
+func (this *Client) Connect(uri string, tlsConfig *tls.Config, msg *message.ConnectMessage, serviceOpts ...func(*service)) (err error) {
 	this.checkConfiguration()
 
 	if msg == nil {
@@ -71,7 +72,12 @@ func (this *Client) Connect(uri string, msg *message.ConnectMessage, serviceOpts
 		return ErrInvalidConnectionType
 	}
 
-	conn, err := net.Dial(u.Scheme, u.Host)
+	var conn net.Conn
+	if tlsConfig == nil {
+		conn, err = net.Dial(u.Scheme, u.Host)
+	} else {
+		conn, err = tls.Dial(u.Scheme, u.Host, tlsConfig)
+	}
 	if err != nil {
 		return err
 	}
