@@ -113,6 +113,15 @@ type Server struct {
 	qoss []byte
 }
 
+func MakeTLSConfig(cert, key string) (*tls.Config, error) {
+	cer, err := tls.LoadX509KeyPair("ssl.cert", "ssl.key")
+	if err != nil {
+		return nil, err
+	}
+	tconf := &tls.Config{Certificates: []tls.Certificate{cer}}
+	return tconf, nil
+}
+
 // ListenAndServe listents to connections on the URI requested, and handles any
 // incoming MQTT client sessions. It should not return until Close() is called
 // or if there's some critical error that stops the server from running. The URI
@@ -134,14 +143,11 @@ func (this *Server) ListenAndServe(uri string, tlsConfig *tls.Config, serviceOpt
 
 	if tlsConfig == nil {
 		this.ln, err = net.Listen(u.Scheme, u.Host)
-		if err != nil {
-			return err
-		}
 	} else {
 		this.ln, err = tls.Listen(u.Scheme, u.Host, tlsConfig)
-		if err != nil {
-			return err
-		}
+	}
+	if err != nil {
+		return err
 	}
 	defer this.ln.Close()
 
